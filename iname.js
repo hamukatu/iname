@@ -19,6 +19,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ * 
  * @author m-kudo
  * @version 1.3
  */
@@ -155,43 +156,42 @@ var chain = function(parent, space){
 //	};
 };
 
+/**
+ * @description 名前空間の定義（の準備。実際の構築はchainが行う）
+ *  ※このfunctionが名前空間として定義されるfunctionのプロトタイプとなる
+ * @param {type} _space
+ * @param {type} _constructor
+ * @returns {parent|Window.ns.edge_node|Window|Window.ns.parent|window}
+ */
+var ns_constructor_origin = function(_space, _constructor){
+	if( !TypeMatch(_space, "string|object") ){ console.warn("iname failed"); return null; }
+	if( typeof _constructor !== "function" ){ _constructor = null; }
 
+	//名前空間文字列を構築用のオブジェクト階層に変換
+	//@example "parent.child" -> {parent:{child:{}}
+	if(typeof _space === "string" || _space.length > 0){
+		var _space_array = _space.split(".");
+		var node_len = _space_array.length;
+		var root = {};
+		var ref = root;
+		_space_array.forEach(function(key, index){
+			//コンストラクタがあり名前空間の終端の場合はコンストラクタを。それ以外はオブジェクト。
+			ref[key] = (_constructor && (index === node_len - 1)) ? _constructor : {};
+			ref = ref[key];
+		});
+		_space = root;
+	}
+	return chain((typeof this === "function" ? this : window), _space);
+};
 
 
 
 ///----------------------------------------------------------------------
 /// public
 ///----------------------------------------------------------------------
-Object.defineProperty(window, "ns", {
+Object.defineProperty(window, "iname", {
 	configurable: false, enumerable: false, writable: true,
-	value: named.call(
-	/**
-	 * @description 名前空間の定義（の準備。実際の構築はchainが行う）
-	 *  ※このfunctionが名前空間として定義されるfunctionのプロトタイプとなる
-	 * @param {type} _space
-	 * @param {type} _constructor
-	 * @returns {parent|Window.ns.edge_node|Window|Window.ns.parent|window}
-	 */
-	function(_space, _constructor){
-		if( !TypeMatch(_space, "string|object") ){ console.warn("ns fail"); return null; }
-		if( typeof _constructor !== "function" ){ _constructor = null; }
-
-		//名前空間文字列を構築用のオブジェクト階層に変換
-		//@example "parent.child" -> {parent:{child:{}}
-		if(typeof _space === "string" || _space.length > 0){
-			var _space_array = _space.split(".");
-			var node_len = _space_array.length;
-			var root = {};
-			var ref = root;
-			_space_array.forEach(function(key, index){
-				//コンストラクタがあり名前空間の終端の場合はコンストラクタを。それ以外はオブジェクト。
-				ref[key] = (_constructor && (index === node_len - 1)) ? _constructor : {};
-				ref = ref[key];
-			});
-			_space = root;
-		}
-		return chain((typeof this === "function" ? this : window), _space);
-	}, "ns", true)
+	value: named.call(ns_constructor_origin, "iname", true)
 });
 
 /**
@@ -199,15 +199,14 @@ Object.defineProperty(window, "ns", {
  * 名前空間オブジェクト全体に継承したい機能はwindow.nsのprototypeに定義していく。
  *  exinherit.call(window.ns, {追加したい機能や値などのオブジェクト}) としても良い。
  */
-Object.defineProperty(window["ns"].prototype, "_super_", {
+Object.defineProperty(window["iname"].prototype, "_super_", {
 	get: function(){ return this.constructor["_super_"]; },
-	//set: function(){}, ///代入しようとしてもなにもしない
 	enumerable: false,
 	configurable: false
 });
 
 ///名前空間とそのコンストラクタとしてのfunction定義
-Function.prototype["ns"] = function(_space){ return window["ns"].call(this, _space); };
+Function.prototype["iname"] = function(_space){ return window["iname"].call(this, _space); };
 
 
 /**
@@ -220,7 +219,6 @@ Function.prototype.defineProto = function(){
 	else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
 	else{ return exinherit.apply(this.prototype, arguments); }
 };
-Function.prototype.proto = Function.prototype.defineProto;
 
 /**
  * @description functionのメンバにオブジェクトをマージする
@@ -232,6 +230,5 @@ Function.prototype.defineMember = function(){
 	exinherit.apply(this, arguments);
 	return this;
 };
-Function.prototype.global = Function.prototype.defineMember;
 
 })();
