@@ -211,35 +211,26 @@ Function.prototype["ns"] = function(_space){ return window["ns"].call(this, _spa
 
 
 /**
- * @description functionのprototypeにオブジェクトを設定する
+ * @description functionのprototypeにオブジェクトをマージする
  * @param {type} _prototype
  * @returns {undefined}
  */
 Function.prototype.defineProto = function(){
-//	if(this == null || this instanceof Window){ return inherits.apply({}, arguments); }
-//	else{ return inherits.apply(this, arguments); }
-	
-	//if(typeof this !== typeof Function){ throw new Error("defineProto called illegal instance."); }
 	if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
 	else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
 	else{ return exinherit.apply(this.prototype, arguments); }
-	//else{ return exinherit.apply(this, arguments); }
-	//inherits.apply(this, arguments); //_prototypeを継承する
-	//inherits.call(this, _prototype); //_prototypeを継承する
 };
 Function.prototype.proto = Function.prototype.defineProto;
 
-//Function.prototype.defineMember = function(_static_property){
+/**
+ * @description functionのメンバにオブジェクトをマージする
+ * @param {type} _prototype
+ * @returns {undefined}
+ */
 Function.prototype.defineMember = function(){
 	if(typeof this !== typeof Function){ throw new Error("defineMember called illegal instance."); }
 	exinherit.apply(this, arguments);
 	return this;
-	
-//	_static_property = _static_property || {};
-//	if(typeof _static_property === "object"){
-//		for(var p in _static_property){ this[p] = _static_property[p]; }
-//	}
-//	return this;
 };
 Function.prototype.global = Function.prototype.defineMember;
 
