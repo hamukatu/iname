@@ -183,7 +183,26 @@ var ns_constructor_origin = function(_space, _constructor){
 	}
 	return chain((typeof this === "function" ? this : window), _space);
 };
+ns_constructor_origin.prototype.extend = function(){
+	if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
+	else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
+	else{ return exinherit.apply(this.prototype, arguments); }
+};
 
+ns_constructor_origin.prototype.define = function(){
+}
+
+/**
+ * @description functionのメンバにオブジェクトをマージする
+ * @param {type} _prototype
+ * @returns {undefined}
+ */
+//Function.prototype.defineMember = function(){
+ns_constructor_origin.prototype.append = function(){
+	if(typeof this !== typeof Function){ throw new Error("defineMember called illegal instance."); }
+	exinherit.apply(this, arguments);
+	return this;
+};
 
 
 ///----------------------------------------------------------------------
@@ -214,18 +233,25 @@ Function.prototype["iname"] = function(_space){ return window["iname"].call(this
  * @param {type} _prototype
  * @returns {undefined}
  */
-Function.prototype.defineProto = function(){
+//Function.prototype.defineProto = function(){
+Function.prototype.extend = function(){
 	if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
 	else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
 	else{ return exinherit.apply(this.prototype, arguments); }
 };
+
+
+Function.prototype.define = function(){
+}
+
 
 /**
  * @description functionのメンバにオブジェクトをマージする
  * @param {type} _prototype
  * @returns {undefined}
  */
-Function.prototype.defineMember = function(){
+//Function.prototype.defineMember = function(){
+Function.prototype.append = function(){
 	if(typeof this !== typeof Function){ throw new Error("defineMember called illegal instance."); }
 	exinherit.apply(this, arguments);
 	return this;

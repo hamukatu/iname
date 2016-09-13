@@ -11,3 +11,8 @@ Object.defineProperty;
 
 Function.prototype.proto;
 Function.prototype.global;
+
+function iname(_space, _constructor){};
+iname.prototype.extend;
+iname.prototype.define;
+iname.prototype.append;
