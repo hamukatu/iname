@@ -61,10 +61,11 @@ var exinherit = function(){
 
 			///※あんましエレガントじゃないが……。
 			/// dstに _define_:{} というメンバがあったら、definePropertyでsrcに定義する。
-			if(dst[key] instanceof Object && dst[key].hasOwnProperty("_define_")){
-				Object.defineProperty(src, key, dst[key]["_define_"]);
-			}
-			else if(src[key] instanceof Object && TypeMatch(dst[key], "object|array")){
+//			if(dst[key] instanceof Object && dst[key].hasOwnProperty("_define_")){
+//				Object.defineProperty(src, key, dst[key]["_define_"]);
+//			}
+//			else if(src[key] instanceof Object && TypeMatch(dst[key], "object|array")){
+			if(src[key] instanceof Object && TypeMatch(dst[key], "object|array")){
 				src[key] = exinherit.call(src[key], dst[key]);
 			}
 			else if(src[key] === undefined){
@@ -102,6 +103,7 @@ var exinherit_by_define = function(){
  * @param {type} _super_ 参照するインスタンス
  * @returns {Array} arguments 条件次第で第一引数が削除されている
  */
+/*
 var _reference_instance_ = function(_super_){
 	//thisが継承先としてcallされている
 	//undefinedなら継承しない。しかし第一引数の削除は行う
@@ -113,7 +115,17 @@ var _reference_instance_ = function(_super_){
 	exinherit.call(this, _super_);
 	return Array.apply(null,arguments).slice(1);
 };
+*/
 
+
+/**
+ * @description 関数の名付け。call実行。privateなんで例外処理とかしません。
+ * @param {string} _name 変数名指定
+ * @returns {Function}
+ */
+var named = function(_name){
+	return (new Function("return function(c){return function " + _name + "(){return c(this, arguments);};};")())(Function.apply.bind(this));
+};
 /**
  * @description 関数の名付け。call実行。privateなんで例外処理とかしません。
  * @param {string} _name 変数名指定
@@ -121,24 +133,49 @@ var _reference_instance_ = function(_super_){
  *	という機能を追加。
  * @returns {Function}
  */
-var named = function(_name, _origin){
-	return (new Function("return function(c,r){return function " + _name + "(){return c(this," + (_origin ? "arguments" : "r.apply(this,arguments)") + ");};};")())(Function.apply.bind(this), _reference_instance_);
-};
+//var named = function(_name, _origin){
+//	return (new Function("return function(c,r){return function " + _name + "(){return c(this," + (_origin ? "arguments" : "r.apply(this,arguments)") + ");};};")())(Function.apply.bind(this), _reference_instance_);
+//};
 
 /**
  * @description 名前空間の構築。プロトタイプチェーンの構築。
- * @param {type} parent
- * @param {type} space
+ * @param {type} _parent
+ * @param {type} _spaces
  * @returns {undefined}
  */
-var chain = function(parent, space){
-	//エラーチェック
-	if(!TypeMatch(parent, "window|function")){ console.warn("Illegal super class."); return null; }
-	else if(!(space instanceof Object)){ console.warn("Illegal namespace."); return; }
+var chain = function(_parent, _spaces){
+	//※引数のエラーチェックは呼び出し元でやっている
 
+	var node = _parent;
+	var edge_node = _parent;
+	for(var spacename in _spaces){
+		if(!_parent.hasOwnProperty(spacename)){
+			_parent[spacename] = named.call(
+				(typeof _spaces[spacename] === "function") ? _spaces[spacename] : function(){}
+				, spacename
+			);
+		}
+
+		//スーパークラスの継承と_super_メンバの定義。
+		//rootはinameの継承で固定。 ※function本体はwindow直下に配置されます
+		var _super = (_parent === window ? iname : _parent);
+		//Object.setPrototypeOf(_parent[spacename].prototype, _super.prototype);
+		//Object.setPrototypeOf(_parent[spacename], _super.prototype);
+		Object.setPrototypeOf(_parent[spacename], _super);
+		//Object.defineProperty(_parent[spacename].prototype, "_super_", { value: _super, enumerable: false, configurable: false });
+
+		///再帰
+		if(typeof _parent[spacename] === "function" && _parent[spacename].hasOwnProperty("name")){
+			edge_node = _parent[spacename];
+			chain(_parent[spacename], _spaces[spacename]);
+		}
+	}
+	return edge_node;
+
+
+/*
 	var keys = Object.keys(space);
 	if(keys.length === 0){ return; }
-
 	var edge_node = parent;
 	keys.forEach(function(spacename){
 		if(!parent.hasOwnProperty(spacename)){
@@ -171,130 +208,212 @@ var chain = function(parent, space){
 		}
 	});
 	return edge_node;
+*/
 //	};
 };
 
 /**
+ * @description 名前空間の構築。プロトタイプチェーンの構築。
+ * @param {object} _parent
+ * @param {Array} _spaces
+ * @returns {function}
+ */
+var _chain = function(_parent, _spaces){
+	var node = _parent;
+	for(var index = 0; index < _spaces.lengh; index++){
+		var name = _spaces[index];
+
+	}
+
+
+
+
+	var node = _parent;
+	var edge_node = _parent;
+	for(var spacename in _spaces){
+		if(!_parent.hasOwnProperty(spacename)){
+			_parent[spacename] = named.call(
+				(typeof _spaces[spacename] === "function") ? _spaces[spacename] : function(){}
+				, spacename
+			);
+		}
+
+		//スーパークラスの継承と_super_メンバの定義。
+		//rootはinameの継承で固定。 ※function本体はwindow直下に配置されます
+		var _super = (_parent === window ? iname : _parent);
+		//Object.setPrototypeOf(_parent[spacename].prototype, _super.prototype);
+		//Object.setPrototypeOf(_parent[spacename], _super.prototype);
+		Object.setPrototypeOf(_parent[spacename], _super);
+		//Object.defineProperty(_parent[spacename].prototype, "_super_", { value: _super, enumerable: false, configurable: false });
+
+		///再帰
+		if(typeof _parent[spacename] === "function" && _parent[spacename].hasOwnProperty("name")){
+			edge_node = _parent[spacename];
+			chain(_parent[spacename], _spaces[spacename]);
+		}
+	}
+	return edge_node;
+};
+
+
+/**
  * @description 名前空間の定義（の準備。実際の構築はchainが行う）
  *  ※このfunctionが名前空間として定義されるfunctionのプロトタイプとなる
- * @param {string|object} _namespace
+ * @param {string} _namespace
  * @param {function} _constructor
  * @returns {parent|Window.ns.edge_node|Window|Window.ns.parent|window}
  */
 //var ns_constructor_origin = function(_space, _constructor){
 //function iname (_space, _constructor){
-function iname (_namespace, _constructor){
-/*
-	if(typeof _namespace !== "string" || _namespace.length === 0){ console.warn("namespace make failed"); return null; }
+//function iname (_namespace, _constructor){
+function iname(_namespace, _constructor){
+//	if(!(this instanceof iname)){ return new iname(_namespace, _constructor); }
+
+	if((typeof _namespace !== "string") || _namespace.length === 0){ throw new Error("illegal namspace"); }
+	//if( !TypeMatch(_namespace, "string|object") ){ throw new Error("illegal namspace"); }
 	if(typeof _constructor !== "function"){ _constructor = function(){}; }
-//	_constructor.constructor = iname;
-//	if( !TypeMatch(_space, "string|object") ){ console.warn("iname failed"); return null; }
-//	if( typeof _constructor !== "function" ){ _constructor.constructor = iname; }
-//	else {_constructor = iname; }
+	//_constructor = _constructor || function(){}; 
+	//if( typeof _constructor !== "function" ){ _constructor = null; }
 
-	//_constructor.constructor = iname;
-	var ref = window;
-	var _super = iname;
-
-	var _spaces = _namespace.split(".");
-	_spaces.forEach(function(_name, index){
-		if(!ref.hasOwnProperty(_name)){
-			if(index === (_spaces.length - 1)){
-				ref[_name] = _constructor;
-			}else{
-				ref[_name] = function(){};
-			}
-			ref[_name].prototype = Object.create(_super);
-		}
-		ref = ref[_name];
-	});
-	return ref;
-*/
-/*
-	var _spaces = _namespace.split(".");
-	var node_len = _spaces.length;
-	var root = {};
-	var ref = root;
-	_spaces.forEach(function(key, index){
-		//名前空間の終端
-		if(index === node_len - 1){
-
-			ref[key] = _constructor;
-		}
-		else{
-			var _c = named.call(function(){}, key);
-			_c.constructor = iname;
-			ref[key] = _c;
-		}
-
-		ref = ref[key];
-		//コンストラクタがあり名前空間の終端の場合はコンストラクタを。それ以外はオブジェクト。
-		ref[key] = (_constructor && (index === node_len - 1)) ? _constructor : {};
-		ref = ref[key];
-	});
-	_space = root;
-*/
-/*
-	if(typeof _space === "string" && _space.length > 0){
-		var _space_array = arguments[0].split(".");
-		var node_len = _space_array.length;
-		var root = {};
-		var ref = root;
-		_space_array.forEach(function(key, index){
-			//名前空間の終端
-			if(index === node_len - 1){
-				
-				ref[key] = _constructor;
-			}
-			else{
-				var _c = named.call(function(){}, key);
-				_c.constructor = iname;
-				ref[key] = _c;
-			}
-
-			ref = ref[key];
-			//コンストラクタがあり名前空間の終端の場合はコンストラクタを。それ以外はオブジェクト。
-			//ref[key] = (_constructor && (index === node_len - 1)) ? _constructor : {};
-			//ref = ref[key];
-		});
-		_space = root;
-	}
-	return chain((typeof this === "function" ? this : window), _space);
-	*/
-
-	if( !TypeMatch(_namespace, "string|object") ){ console.warn("iname failed"); return null; }
-	if( typeof _constructor !== "function" ){ _constructor.constructor = null; }
+	///名前空間のroot functionはinameを継承する（exetnd, define, append が継承される）	
+	//Object.setPrototypeOf(_constructor.prototype, iname.prototype);
 
 	//名前空間文字列を構築用のオブジェクト階層に変換
 	//@example "parent.child" -> {parent:{child:{}}
-	if(typeof _namespace === "string" || _namespace.length > 0){
-		var _space_array = _namespace.split(".");
-		var node_len = _space_array.length;
-		var root = {};
-		var ref = root;
-		_space_array.forEach(function(key, index){
-			//コンストラクタがあり名前空間の終端の場合はコンストラクタを。それ以外はオブジェクト。
-			ref[key] = (_constructor && (index === node_len - 1)) ? _constructor : {};
-			ref = ref[key];
-		});
-		_namespace = root;
-	}
-	return chain((typeof this === "function" ? this : window), _namespace);
-}
+	//if(_namespace.length === 0){ throw new Error("empty namspace"); }
 
+
+
+
+	var node = window;
+	var spaces = _namespace.split(".");
+	for(var index = 0; index < spaces.length; index++){
+		var spacename = spaces[index];
+		if( !node.hasOwnProperty(spacename) ){
+			node[spacename] = named.call((index < (spaces.length - 1)) ? function(){} : _constructor, spacename);
+		}
+		var _super = (node === window ? iname : node);
+		//Object.setPrototypeOf(node[spacename].prototype, _super.prototype);
+		//Object.setPrototypeOf(node[spacename], _super.prototype);
+		//Object.setPrototypeOf(node[spacename], Object.create(_super));
+		Object.setPrototypeOf(node[spacename], _super);
+
+		//Object.defineProperty(node[spacename].prototype, "_super_", { value: _super, enumerable: false, configurable: false });
+
+		node = node[spacename];
+	}
+
+	return node;
+
+/*
+	var spaces = _namespace.split(".");
+	var tree = {};
+	for(var index=0, ref=tree; index < spaces.length; index++){
+		var key=spaces[index];
+		ref[key] = (index === (spaces.length-1) ? _constructor : function(){});
+		ref = ref[key]
+	}
+	return chain(window, tree); ///chainの基底オブジェクトはwindow
+*/
+
+	//_namespace = _tree;
+	//	return chain(window, _namespace); ///chainの基底オブジェクトはwindow
+};
+
+Object.setPrototypeOf(iname, {
+	"extend":function(){
+			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
+			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
+			else{ return exinherit.apply(this.prototype, arguments); }
+	},
+	"define": function(){
+		if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
+		else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
+		else{ return exinherit_by_define.apply(this.prototype, arguments); }
+	},
+	"append": function(){
+		exinherit.apply(this, arguments);
+		return this;
+	}
+});
+
+Object.defineProperty(iname, "extend", {
+	value: function(){
+			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
+			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
+			else{ return exinherit.apply(this.prototype, arguments); }
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(iname, "define", {
+	value: function(){
+		if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
+		else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
+		else{ return exinherit_by_define.apply(this.prototype, arguments); }
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(iname, "append", {
+	value: function(){
+		exinherit.apply(this, arguments);
+		return this;
+	},
+	enumerable: false,
+	configurable: false
+});
+/*
+Object.defineProperty(iname.prototype, "extend", {
+	value: function(){
+			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
+			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
+			else{ return exinherit.apply(this.prototype, arguments); }
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(iname.prototype, "define", {
+	value: function(){
+		if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
+		else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
+		else{ return exinherit_by_define.apply(this.prototype, arguments); }
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(iname.prototype, "append", {
+	value: function(){
+		exinherit.apply(this, arguments);
+		return this;
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(iname.prototype, "_super_", {
+	get: function(){ return this.constructor["_super_"]; },
+//	get: function(){ return this.constructor["_super_"]; },
+	enumerable: false,
+	configurable: false
+});
+*/
+/*
 //ns_constructor_origin.prototype.extend = function(){
 iname.prototype.extend = function(){
 	if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
 	else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
 	else{ return exinherit.apply(this.prototype, arguments); }
 };
+*/
 
+/*
 //ns_constructor_origin.prototype.define = function(){
 iname.prototype.define = function(){
 	if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
 	else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
 	else{ return exinherit_by_define.apply(this.prototype, arguments); }
 }
+*/
 
 /**
  * @description functionのメンバにオブジェクトをマージする
@@ -303,24 +422,21 @@ iname.prototype.define = function(){
  */
 //Function.prototype.defineMember = function(){
 //ns_constructor_origin.prototype.append = function(){
+/*
 iname.prototype.append = function(){
 	if(typeof this !== typeof Function){ throw new Error("defineMember called illegal instance."); }
 	exinherit.apply(this, arguments);
 	return this;
 };
+*/
 
-Object.defineProperty(iname.prototype, "_super_", {
-	get: function(){ return this.constructor["_super_"]; },
-	enumerable: false,
-	configurable: false
-});
 
 ///----------------------------------------------------------------------
 /// public
 ///----------------------------------------------------------------------
 Object.defineProperty(window, "iname", {
 	configurable: false, enumerable: false, writable: true,
-	value: iname
+	value: named.call(iname, "iname")
 	//named.call(iname, "iname", true)
 	//value: named.call(ns_constructor_origin, "iname", true)
 });
