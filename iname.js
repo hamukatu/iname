@@ -243,6 +243,7 @@ var _chain = function(_parent, _spaces){
 		var _super = (_parent === window ? iname : _parent);
 		//Object.setPrototypeOf(_parent[spacename].prototype, _super.prototype);
 		//Object.setPrototypeOf(_parent[spacename], _super.prototype);
+		//Object.setPrototypeOf(_parent[spacename], Object.create(_super));
 		Object.setPrototypeOf(_parent[spacename], _super);
 		//Object.defineProperty(_parent[spacename].prototype, "_super_", { value: _super, enumerable: false, configurable: false });
 
@@ -266,7 +267,9 @@ var _chain = function(_parent, _spaces){
 //var ns_constructor_origin = function(_space, _constructor){
 //function iname (_space, _constructor){
 //function iname (_namespace, _constructor){
-function iname(_namespace, _constructor){
+var _iname = named.call(
+function (_namespace, _constructor){
+	if(arguments.length === 0){ return this; } /// new iname() されたとき。prototypeを利用する。
 //	if(!(this instanceof iname)){ return new iname(_namespace, _constructor); }
 
 	if((typeof _namespace !== "string") || _namespace.length === 0){ throw new Error("illegal namspace"); }
@@ -283,22 +286,56 @@ function iname(_namespace, _constructor){
 	//if(_namespace.length === 0){ throw new Error("empty namspace"); }
 
 
-
-
 	var node = window;
 	var spaces = _namespace.split(".");
 	for(var index = 0; index < spaces.length; index++){
 		var spacename = spaces[index];
 		if( !node.hasOwnProperty(spacename) ){
 			node[spacename] = named.call((index < (spaces.length - 1)) ? function(){} : _constructor, spacename);
-		}
-		var _super = (node === window ? iname : node);
-		//Object.setPrototypeOf(node[spacename].prototype, _super.prototype);
-		//Object.setPrototypeOf(node[spacename], _super.prototype);
-		//Object.setPrototypeOf(node[spacename], Object.create(_super));
-		Object.setPrototypeOf(node[spacename], _super);
 
-		//Object.defineProperty(node[spacename].prototype, "_super_", { value: _super, enumerable: false, configurable: false });
+			///名前空間のrootにinameを継承。名前空間の下位クラスに上位クラスを継承。
+			if(node === window){
+				Object.setPrototypeOf(node[spacename], new window["iname"]());
+			}else{
+				Object.setPrototypeOf(node[spacename], node);
+			}
+
+			///通常の上位クラスのprototypeを下位クラスに継承
+			if(node === window){
+				//Object.setPrototypeOf(node[spacename], new window["iname"]());
+			}else{
+				Object.setPrototypeOf(node[spacename].prototype, node.prototype);
+			}
+
+/*
+			if(node === window){
+				//Object.setPrototypeOf(node[spacename].prototype, window["iname"]);
+				//Object.setPrototypeOf(node[spacename], window["iname"]);
+				var iname_instance = new window["iname"]();
+				Object.setPrototypeOf(node[spacename].prototype, iname_instance);
+				Object.setPrototypeOf(node[spacename], iname_instance);
+//				Object.setPrototypeOf(node[spacename].prototype, window["iname"].prototype);
+//				Object.setPrototypeOf(node[spacename], window["iname"].prototype);
+			}else{
+				Object.setPrototypeOf(node[spacename].prototype, node.prototype);
+				Object.setPrototypeOf(node[spacename], node.prototype);
+			}
+*/
+//			var _super = (node === window ? window["iname"] : node);
+//			Object.setPrototypeOf(node[spacename].prototype, _super.prototype);
+
+			//Object.setPrototypeOf(node[spacename].prototype, _super);
+			//Object.setPrototypeOf(node[spacename].prototype, _super.prototype);
+			//Object.setPrototypeOf(node[spacename], _super.prototype);
+			//Object.setPrototypeOf(node[spacename], Object.create(_super));
+			//Object.setPrototypeOf(node[spacename], _super);
+
+
+			//Object.defineProperty(node[spacename].prototype, "_super_", { value: _super, enumerable: false, configurable: false });
+		}
+		else if(typeof node[spacename] !== "function"){
+			new Error('Conflict member "' + spacename + '"');
+		}
 
 		node = node[spacename];
 	}
@@ -318,9 +355,9 @@ function iname(_namespace, _constructor){
 
 	//_namespace = _tree;
 	//	return chain(window, _namespace); ///chainの基底オブジェクトはwindow
-};
-
-Object.setPrototypeOf(iname, {
+}, "iname");
+/*
+Object.setPrototypeOf(_iname, {
 	"extend":function(){
 			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
 			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
@@ -336,35 +373,9 @@ Object.setPrototypeOf(iname, {
 		return this;
 	}
 });
-
-Object.defineProperty(iname, "extend", {
-	value: function(){
-			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
-			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
-			else{ return exinherit.apply(this.prototype, arguments); }
-	},
-	enumerable: false,
-	configurable: false
-});
-Object.defineProperty(iname, "define", {
-	value: function(){
-		if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
-		else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
-		else{ return exinherit_by_define.apply(this.prototype, arguments); }
-	},
-	enumerable: false,
-	configurable: false
-});
-Object.defineProperty(iname, "append", {
-	value: function(){
-		exinherit.apply(this, arguments);
-		return this;
-	},
-	enumerable: false,
-	configurable: false
-});
+*/
 /*
-Object.defineProperty(iname.prototype, "extend", {
+Object.defineProperty(_iname, "extend", {
 	value: function(){
 			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
 			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
@@ -373,7 +384,7 @@ Object.defineProperty(iname.prototype, "extend", {
 	enumerable: false,
 	configurable: false
 });
-Object.defineProperty(iname.prototype, "define", {
+Object.defineProperty(_iname, "define", {
 	value: function(){
 		if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
 		else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
@@ -382,7 +393,7 @@ Object.defineProperty(iname.prototype, "define", {
 	enumerable: false,
 	configurable: false
 });
-Object.defineProperty(iname.prototype, "append", {
+Object.defineProperty(_iname, "append", {
 	value: function(){
 		exinherit.apply(this, arguments);
 		return this;
@@ -390,6 +401,36 @@ Object.defineProperty(iname.prototype, "append", {
 	enumerable: false,
 	configurable: false
 });
+*/
+
+Object.defineProperty(_iname.prototype, "extend", {
+	value: function(){
+			if(this == null || this instanceof Window){ return exinherit.apply({}, arguments); }
+			else if(this instanceof Function){ return exinherit.apply(this.prototype, arguments); }
+			else{ return exinherit.apply(this.prototype, arguments); }
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(_iname.prototype, "define", {
+	value: function(){
+		if(this == null || this instanceof Window){ return exinherit_by_define.apply({}, arguments); }
+		else if(this instanceof Function){ return exinherit_by_define.apply(this.prototype, arguments); }
+		else{ return exinherit_by_define.apply(this.prototype, arguments); }
+	},
+	enumerable: false,
+	configurable: false
+});
+Object.defineProperty(_iname.prototype, "append", {
+	value: function(){
+		exinherit.apply(this, arguments);
+		return this;
+	},
+	enumerable: false,
+	configurable: false
+});
+
+/*
 Object.defineProperty(iname.prototype, "_super_", {
 	get: function(){ return this.constructor["_super_"]; },
 //	get: function(){ return this.constructor["_super_"]; },
@@ -436,7 +477,7 @@ iname.prototype.append = function(){
 ///----------------------------------------------------------------------
 Object.defineProperty(window, "iname", {
 	configurable: false, enumerable: false, writable: true,
-	value: named.call(iname, "iname")
+	value: _iname	//named.call(_iname, "iname")
 	//named.call(iname, "iname", true)
 	//value: named.call(ns_constructor_origin, "iname", true)
 });
