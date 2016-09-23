@@ -1,5 +1,14 @@
+<<<<<<< HEAD
 /min/compiler.jar
 /min/jquery1.9_externs.js
 /min/make.bat
 /min/_console.txt
 nbproject/*
+=======
+.vscode/*
+/min/compiler.jar
+/min/jquery1.9_externs.js
+/min/make.bat
+/min/_console.txt
+nbproject/*
+>>>>>>> master
