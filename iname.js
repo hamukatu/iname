@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @author m-kudo
- * @version 1.3
+ * @version 1.4.1
  */
 (function(){
 "use strict";
@@ -155,7 +154,7 @@ function iname(_namespace, _constructor){
 			}
 		}
 		else if(typeof node[spacename] !== "function"){
-			new Error('Conflict member "' + spacename + '"');
+			throw new Error('Conflict member "' + spacename + '"');
 		}
 		node = node[spacename];
 	}
