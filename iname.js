@@ -20,12 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
-<<<<<<< HEAD
- * @author m-kudo
- * @version 1.4
-=======
  * @version 1.4.1
->>>>>>> ver1.4
  */
 (function(){
 "use strict";
