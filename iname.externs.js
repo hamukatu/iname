@@ -1,18 +1,24 @@
 
-function ns(){}
-Function.prototype.ns;
-Function.prototype.defineProto;
-Function.prototype.defineMember;
-
-
-Object.getPrototypeOf;
 Object.setPrototypeOf;
 Object.defineProperty;
 
-Function.prototype.proto;
-Function.prototype.global;
-
+/**
+ * @function iname
+ */
 function iname(_space, _constructor){};
+/**
+ * @function extend
+ */
 iname.prototype.extend;
-iname.prototype.define;
+/**
+ * @function exdef
+ */
+iname.prototype.exdef;
+/**
+ * @function append
+ */
 iname.prototype.append;
+/**
+ * @function apdef
+ */
+iname.prototype.apdef;

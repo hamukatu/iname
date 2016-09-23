@@ -87,7 +87,7 @@ var exinherit = function(dst, isUpperVersion, byDefine){
  * @type {arguments} args
  * @returns {object}
  */
-var setExinheritDest = function(src, args){
+var setExinheritArgs = function(src, args){
 	var res = {dst: [], isUpperVersion: null};
 	if(!src.hasOwnProperty("_ver_")){ src["_ver_"] = -1; }
 
@@ -113,7 +113,7 @@ var setExinheritDest = function(src, args){
  * @returns {object} thisを返します
  */
 var callExinherit = function(_args, _byDefine, _append){
-		var args = setExinheritDest(this, _args);
+		var args = setExinheritArgs(this, _args);
 		args.dst.forEach((function(_dst){
 			exinherit.call(_append ? this : this.prototype, _dst, args.isUpperVersion, _byDefine);
 		}).bind(this));
@@ -127,29 +127,20 @@ var callExinherit = function(_args, _byDefine, _append){
  * @param {function} _constructor
  * @returns {function} 名前空間として作成されたfunction
  */
-function iname(_namespace, _constructor, _version){
+function iname(_namespace, _constructor){
 	if(this instanceof iname){ return this; } /// new iname(...) されたとき。
-//	if(this instanceof window["iname"]){ return this; } /// new iname(...) されたとき。
-
-	if((typeof _namespace !== "string") || _namespace.length === 0){ throw new Error("illegal namspace"); }
-	if(typeof _constructor !== "function"){ _constructor = function(){}; }
-
-	var ver = -1;
-	if(TypeMatch(_version, "string|number")){ ver = _version; }
+	if((typeof _namespace !== "string") || _namespace.length === 0){ throw new Error("Illegal namspace"); }
+	_constructor = _constructor || function(){};
+	if(typeof _constructor !== "function"){ throw new Error("Illegal constructor"); }
 
 	var node = window;
 	var spaces = _namespace.split(".");
 	for(var index = 0; index < spaces.length; index++){
 		var spacename = spaces[index];
 		if( !node.hasOwnProperty(spacename) ){
-			///名前空間の末端（指定コンストラクタの階層）
-			if(index === (spaces.length - 1)){
-				node[spacename] = named.call(_constructor, spacename);
-			}
-			///名前空間の途中経路経路
-			else{
-				node[spacename] = named.call(function(){}, spacename);
-			}
+			///名前空間の末端（指定コンストラクタの階層） -> _constructor
+			///名前空間の途中経路経路 -> function(){}
+			node[spacename] = named.call((index===(spaces.length-1)) ? _constructor : function(){}, spacename);
 
 			if(node === window){
 				///名前空間functionにinameを継承。
@@ -157,7 +148,6 @@ function iname(_namespace, _constructor, _version){
 			}else{
 				///名前空間functionに上位階層の名前空間を継承。
 				Object.setPrototypeOf(node[spacename], node);
-
 				///通常の上位クラスのprototypeを下位クラスに継承
 				Object.setPrototypeOf(node[spacename].prototype, node.prototype);
 				///スーパークラスを取得するメンバを追加
