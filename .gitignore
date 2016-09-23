@@ -1,4 +1,5 @@
-.vscode/*
+.vscode/
+.vscode/settings.json
 /min/compiler.jar
 /min/jquery1.9_externs.js
 /min/make.bat
