@@ -189,7 +189,7 @@ Object.defineProperty(iname.prototype, "apdef", {
 
 ///globalへinameを公開
 Object.defineProperty(window, "iname", {
-	value: iname,
+	value: named.call(iname, "iname"),
 	enumerable: false, configurable: false
 });
 
