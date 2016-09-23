@@ -21,7 +21,7 @@
  * SOFTWARE.
  * 
  * @author m-kudo
- * @version 1.3
+ * @version 1.4
  */
 (function(){
 "use strict";
