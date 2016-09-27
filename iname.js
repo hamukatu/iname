@@ -20,10 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.4.1
+ * @version 1.4.2
  */
 (function(){
 "use strict";
+
+///confclictおよびredefineの回避
+if( window.hasOwnProperty("iname") ){ return; }
 
 ///----------------------------------------------------------------------
 /// private
