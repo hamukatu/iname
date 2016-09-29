@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.4.2
+ * @version 1.5
  */
 (function(){
 "use strict";
@@ -69,6 +69,19 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 		for(var key in dst){
 			///prototypeの固有メンバに同名のメンバがないか、srcのバージョンがdst未満の場合は上書き・挿入確定
 			if(!src.hasOwnProperty(key) || isUpperVersion){
+
+				///ver1.5で追加する新機能。with 的なやつ。
+				///メンバにfunctionが追加されるときはそのまま入れるのではなく、
+				///さらにfunctionで囲って、private変数に、var <namespace> = window.***** でglobalの名前空間を参照する
+				///これで たとえば spica.Child1.Child2 が Child1 で参照できる。
+				//if(TypeMatch(dat[key], "function")){
+				//	"function(){" +
+				//		+"var " + this.name + " =" this
+				//	} 
+				//	new Function()
+				//	eval("")
+				//}
+
 				if(byDefine && dst[key] instanceof Object){
 					Object.defineProperty(src, key, dst[key]);
 				}else{
