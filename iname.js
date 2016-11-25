@@ -70,18 +70,6 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 			///prototypeの固有メンバに同名のメンバがないか、srcのバージョンがdst未満の場合は上書き・挿入確定
 			if(!src.hasOwnProperty(key) || isUpperVersion){
 
-				///ver1.5で追加する新機能。with 的なやつ。
-				///メンバにfunctionが追加されるときはそのまま入れるのではなく、
-				///さらにfunctionで囲って、private変数に、var <namespace> = window.***** でglobalの名前空間を参照する
-				///これで たとえば spica.Child1.Child2 が Child1 で参照できる。
-				//if(TypeMatch(dat[key], "function")){
-				//	"function(){" +
-				//		+"var " + this.name + " =" this
-				//	} 
-				//	new Function()
-				//	eval("")
-				//}
-
 				if(byDefine && dst[key] instanceof Object){
 					Object.defineProperty(src, key, dst[key]);
 				}else{
@@ -142,8 +130,13 @@ var callExinherit = function(_args, _byDefine, _append){
  * @param {function} _constructor
  * @returns {function} 名前空間として作成されたfunction
  */
-function iname(_namespace, _constructor){
+function iname(_namespace, _constructor){ 
 	if(this instanceof iname){ return this; } /// new iname(...) されたとき。
+	if(typeof _namespace === "function"){	
+		//第一引数がfunctionならばそのfunctionへinameを継承する
+		Object.setPrototypeOf(_namespace, new iname());
+		return _namespace;
+	}
 	if((typeof _namespace !== "string") || _namespace.length === 0){ throw new Error("Illegal namspace"); }
 	_constructor = _constructor || function(){};
 	if(typeof _constructor !== "function"){ throw new Error("Illegal constructor"); }
