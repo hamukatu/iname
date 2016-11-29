@@ -20,13 +20,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.5
+ * @version 1.5.1
  */
 (function(){
 "use strict";
 
-///confclictおよびredefineの回避
-if( window.hasOwnProperty("iname") ){ return; }
+var ver = "1.5.1";
+
+///confclictおよびredefineの回避 ※バージョン情報を検査
+if( window.hasOwnProperty("iname") ){
+	if(window.iname.hasOwnProperty("_ver_") && window.iname["_ver_"] >= "1.5"){ return; }
+}
 
 ///----------------------------------------------------------------------
 /// private
@@ -169,7 +173,7 @@ function iname(_namespace, _constructor){
 	}
 	return node;
 }
-
+iname["_ver_"] = ver;
 
 ///----------------------------------------------------------------------
 /// public
@@ -199,7 +203,7 @@ Object.defineProperty(iname.prototype, "apdef", {
 ///globalへinameを公開
 Object.defineProperty(window, "iname", {
 	value: named.call(iname, "iname"),
-	enumerable: false, configurable: false
+	enumerable: false, configurable: true
 });
 
 })();
