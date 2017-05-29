@@ -20,16 +20,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.5.1
+ * @version 1.5.2
  */
 (function(){
 "use strict";
 
-var ver = "1.5.1";
+var version = "1.5.2";
 
 ///confclictおよびredefineの回避 ※バージョン情報を検査
 if( window.hasOwnProperty("iname") ){
-	if(window.iname.hasOwnProperty("_ver_") && window.iname["_ver_"] >= "1.5"){ return; }
+	if(window.iname.hasOwnProperty("_ver_") && window.iname["_ver_"] >= version){ return; }
 }
 
 ///----------------------------------------------------------------------
@@ -73,7 +73,6 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 		for(var key in dst){
 			///prototypeの固有メンバに同名のメンバがないか、srcのバージョンがdst未満の場合は上書き・挿入確定
 			if(!src.hasOwnProperty(key) || isUpperVersion){
-
 				if(byDefine && dst[key] instanceof Object){
 					Object.defineProperty(src, key, dst[key]);
 				}else{
@@ -173,7 +172,7 @@ function iname(_namespace, _constructor){
 	}
 	return node;
 }
-iname["_ver_"] = ver;
+iname["_ver_"] = version;
 
 ///----------------------------------------------------------------------
 /// public
