@@ -80,7 +80,8 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 				}
 			}
 			///同名の固有メンバがあるが、objectの場合は下位メンバも走査するため再帰へ。
-			else if( src[key] instanceof Object && TypeMatch(dst[key], "object|function") ){
+			///definePropertyを使用する場合はオブジェクトプロパティがメンバにあるため行わない。
+			else if(!byDefine && src[key] instanceof Object && TypeMatch(dst[key], "object|function")){
 				src[key] = exinherit.call(src[key], dst[key], isUpperVersion, byDefine);
 			}
 		}
