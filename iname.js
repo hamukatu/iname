@@ -20,16 +20,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.5.1
+ * @version 1.5.2
  */
 (function(){
 "use strict";
 
-var ver = "1.5.1";
+var version = "1.5.2";
 
 ///confclictおよびredefineの回避 ※バージョン情報を検査
 if( window.hasOwnProperty("iname") ){
-	if(window.iname.hasOwnProperty("_ver_") && window.iname["_ver_"] >= "1.5"){ return; }
+	if(window.iname.hasOwnProperty("_ver_") && window.iname["_ver_"] >= version){ return; }
 }
 
 ///----------------------------------------------------------------------
@@ -73,7 +73,6 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 		for(var key in dst){
 			///prototypeの固有メンバに同名のメンバがないか、srcのバージョンがdst未満の場合は上書き・挿入確定
 			if(!src.hasOwnProperty(key) || isUpperVersion){
-
 				if(byDefine && dst[key] instanceof Object){
 					Object.defineProperty(src, key, dst[key]);
 				}else{
@@ -81,7 +80,8 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 				}
 			}
 			///同名の固有メンバがあるが、objectの場合は下位メンバも走査するため再帰へ。
-			else if( src[key] instanceof Object && TypeMatch(dst[key], "object|function") ){
+			///definePropertyを使用する場合はオブジェクトプロパティがメンバにあるため行わない。
+			else if(!byDefine && src[key] instanceof Object && TypeMatch(dst[key], "object|function")){
 				src[key] = exinherit.call(src[key], dst[key], isUpperVersion, byDefine);
 			}
 		}
@@ -173,7 +173,7 @@ function iname(_namespace, _constructor){
 	}
 	return node;
 }
-iname["_ver_"] = ver;
+iname["_ver_"] = version;
 
 ///----------------------------------------------------------------------
 /// public
@@ -187,23 +187,23 @@ Object.defineProperty(iname.prototype, "extend", {
 ///prototypeへのdefineProperty
 Object.defineProperty(iname.prototype, "exdef", {
 	value: function(){ return callExinherit.call(this, arguments, true, false); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 ///オブジェクトメンバへの追加
 Object.defineProperty(iname.prototype, "append", {
 	value: function(){ return callExinherit.call(this, arguments, false, true); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 ///オブジェクトメンバへのdefineProperty
 Object.defineProperty(iname.prototype, "apdef", {
 	value: function(){ return callExinherit.call(this, arguments, true, true); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 
 ///globalへinameを公開
 Object.defineProperty(window, "iname", {
 	value: named.call(iname, "iname"),
-	enumerable: false, configurable: true
+	enumerable: false, configurable: true, writable: true
 });
 
 })();
