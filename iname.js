@@ -187,23 +187,23 @@ Object.defineProperty(iname.prototype, "extend", {
 ///prototypeへのdefineProperty
 Object.defineProperty(iname.prototype, "exdef", {
 	value: function(){ return callExinherit.call(this, arguments, true, false); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 ///オブジェクトメンバへの追加
 Object.defineProperty(iname.prototype, "append", {
 	value: function(){ return callExinherit.call(this, arguments, false, true); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 ///オブジェクトメンバへのdefineProperty
 Object.defineProperty(iname.prototype, "apdef", {
 	value: function(){ return callExinherit.call(this, arguments, true, true); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 
 ///globalへinameを公開
 Object.defineProperty(window, "iname", {
 	value: named.call(iname, "iname"),
-	enumerable: false, configurable: true
+	enumerable: false, configurable: true, writable: true
 });
 
 })();
