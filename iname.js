@@ -20,23 +20,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.5.2
+ * @version 1.6.0
  */
-(function(){
+(function(_global){
 "use strict";
 
-var version = "1.5.2";
+var version = "1.6.0";
 
 ///confclictおよびredefineの回避 ※バージョン情報を検査
-if( window.hasOwnProperty("iname") ){
-	if(window.iname.hasOwnProperty("_ver_") && window.iname["_ver_"] >= version){ return; }
+if( _global.hasOwnProperty("iname") ){
+	if(_global.iname.hasOwnProperty("_ver_") && _global.iname["_ver_"] >= version){ return; }
 }
+
+///Object.setPrototypeOfの未定義状態回避
+var fnSetPrototype = Object.setPrototypeOf ? Object.setPrototypeOf : function(_obj, _prototype){ _obj.__proto__ = _prototype };
 
 ///----------------------------------------------------------------------
 /// private
 ///----------------------------------------------------------------------
 /**
- * @description ただの型判定
+ * ただの型判定
+ * @private
  * @param {*} target 判定対象
  * @param {String|<RegExp>} pattern 正規表現
  * @returns {Boolean}
@@ -46,29 +50,30 @@ if( window.hasOwnProperty("iname") ){
  *	TypeMatch([], "array|number") // true
  *	TypeMatch(1, typeof 1 + "|" + typeof "") // true
  */
-var TypeMatch = function(target, pattern){
+function TypeMatch (target, pattern){
 	if(pattern instanceof RegExp){ return Object.prototype.toString.call(target).match(pattern) ? true : false; }
 	return Object.prototype.toString.call(target).match(new RegExp('\\[object ('+pattern+')\\]', 'i')) ? true : false;
 };
 
 /**
- * @description 関数の名付け。thisが名付け対象のfunctionになるように実行する。※ちゃんと使う前提で例外処理とかしない。
+ * 関数の名付け。thisが名付け対象のfunctionになるように実行する。※ちゃんと使う前提で例外処理とかしない。
+ * @private
  * @param {string} _name 変数名指定
  * @returns {function}
  */
-var named = function(_name){
+function named (_name){
 	return (new Function("return function(c){return function " + _name + "(){return c(this, arguments);};};")())(Function.apply.bind(this));
 };
 
 /**
- * @description thisに対して引数のオブジェクトを結合する（属性も）
- * 		結合するオブジェクトのバージョンを指定した場合、結合メンバー名が衝突したときに上書きするかどうか判定する。
+ * thisに対して引数のオブジェクトを結合する（属性も）
+ * 結合するオブジェクトのバージョンを指定した場合、結合メンバー名が衝突したときに上書きするかどうか判定する。
  * @param {function|object} dst 結合元
  * @param {boolean} isUpperVersion 結合するオブジェクトのバージョンが結合先よりも新しいかどうか
  * @param {boolean} byDefine definePropertyで結合するかどうか
  * @returns {function|object} thisを返す 
  */
-var exinherit = function(dst, isUpperVersion, byDefine){
+function exinherit (dst, isUpperVersion, byDefine){
 		var src = this;
 		for(var key in dst){
 			///prototypeの固有メンバに同名のメンバがないか、srcのバージョンがdst未満の場合は上書き・挿入確定
@@ -89,12 +94,12 @@ var exinherit = function(dst, isUpperVersion, byDefine){
 };
 
 /**
- * @description exinheritに渡すための引数を設定する
+ * exinheritに渡すための引数を設定する
  * @type {object} src
  * @type {arguments} args
  * @returns {object}
  */
-var setExinheritArgs = function(src, args){
+function setExinheritArgs (src, args){
 	var res = {dst: [], isUpperVersion: null};
 	if(!src.hasOwnProperty("_ver_")){ src["_ver_"] = -1; }
 
@@ -112,14 +117,15 @@ var setExinheritArgs = function(src, args){
 	if(res.isUpperVersion === null){ res.isUpperVersion = false; }
 	return res;
 };
+
 /**
- * @description exinherit呼び出し用。thisは要素設定先の名前空間function。
+ * exinherit呼び出し用。thisは要素設定先の名前空間function。
  * @type {arguments} _args public呼び出し時のarguments
  * @type {boolean} _byDefine definePropertyで子要素設定するかどうか
  * @type {boolean} _append functionのメンバ直下に要素設定するかどうか
  * @returns {object} thisを返します
  */
-var callExinherit = function(_args, _byDefine, _append){
+function callExinherit (_args, _byDefine, _append){
 		var args = setExinheritArgs(this, _args);
 		args.dst.forEach((function(_dst){
 			exinherit.call(_append ? this : this.prototype, _dst, args.isUpperVersion, _byDefine);
@@ -136,16 +142,17 @@ var callExinherit = function(_args, _byDefine, _append){
  */
 function iname(_namespace, _constructor){ 
 	if(this instanceof iname){ return this; } /// new iname(...) されたとき。
+	if(_namespace == null && _constructor == null){ _namespace = function(){}; }
 	if(typeof _namespace === "function"){	
 		//第一引数がfunctionならばそのfunctionへinameを継承する
-		Object.setPrototypeOf(_namespace, new iname());
+		fnSetPrototype(_namespace, new iname());
 		return _namespace;
 	}
 	if((typeof _namespace !== "string") || _namespace.length === 0){ throw new Error("Illegal namspace"); }
 	_constructor = _constructor || function(){};
 	if(typeof _constructor !== "function"){ throw new Error("Illegal constructor"); }
 
-	var node = window;
+	var node = _global;
 	var spaces = _namespace.split(".");
 	for(var index = 0; index < spaces.length; index++){
 		var spacename = spaces[index];
@@ -154,14 +161,14 @@ function iname(_namespace, _constructor){
 			///名前空間の途中経路経路 -> function(){}
 			node[spacename] = named.call((index===(spaces.length-1)) ? _constructor : function(){}, spacename);
 
-			if(node === window){
+			if(node === _global){
 				///名前空間functionにinameを継承。
-				Object.setPrototypeOf(node[spacename], new iname());
+				fnSetPrototype(node[spacename], new iname());
 			}else{
 				///名前空間functionに上位階層の名前空間を継承。
-				Object.setPrototypeOf(node[spacename], node);
+				fnSetPrototype(node[spacename], node);
 				///通常の上位クラスのprototypeを下位クラスに継承
-				Object.setPrototypeOf(node[spacename].prototype, node.prototype);
+				fnSetPrototype(node[spacename].prototype, node.prototype);
 				///スーパークラスを取得するメンバを追加
 				Object.defineProperty(node[spacename], "_super_", { value: node, enumerable: false, configurable: false });
 			}
@@ -173,7 +180,6 @@ function iname(_namespace, _constructor){
 	}
 	return node;
 }
-iname["_ver_"] = version;
 
 ///----------------------------------------------------------------------
 /// public
@@ -200,10 +206,12 @@ Object.defineProperty(iname.prototype, "apdef", {
 	enumerable: false, configurable: false, writable: false
 });
 
-///globalへinameを公開
-Object.defineProperty(window, "iname", {
-	value: named.call(iname, "iname"),
+///_globalへinameを公開
+var _iname = named.call(iname, "iname");
+_iname["_ver_"] = version;
+Object.defineProperty(_global, "iname", {
+	value: _iname,
 	enumerable: false, configurable: true, writable: true
 });
 
-})();
+})(window);
