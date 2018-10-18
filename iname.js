@@ -20,12 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * 
- * @version 1.6.0
+ * @version 1.7.0
  */
 (function(_global){
 "use strict";
 
-var version = "1.6.0";
+var version = "1.7.0";
 
 ///confclictおよびredefineの回避 ※バージョン情報を検査
 if( _global.hasOwnProperty("iname") ){
@@ -51,18 +51,20 @@ var fnSetPrototype = Object.setPrototypeOf ? Object.setPrototypeOf : function(_o
  *	TypeMatch(1, typeof 1 + "|" + typeof "") // true
  */
 function TypeMatch (target, pattern){
-	if(pattern instanceof RegExp){ return Object.prototype.toString.call(target).match(pattern) ? true : false; }
-	return Object.prototype.toString.call(target).match(new RegExp('\\[object ('+pattern+')\\]', 'i')) ? true : false;
+	if(pattern instanceof RegExp){ return pattern.test(Object.prototype.toString.call(target)); }
+	return (new RegExp('\\[object ('+pattern+')\\]', 'i')).test(Object.prototype.toString.call(target));
+	// Object.prototype.toString.call(target).match(pattern) ? true : false; }
+	//return Object.prototype.toString.call(target).match(new RegExp('\\[object ('+pattern+')\\]', 'i')) ? true : false;
 };
 
 /**
- * 関数の名付け。thisが名付け対象のfunctionになるように実行する。※ちゃんと使う前提で例外処理とかしない。
+ * 関数の名付け。thisが名付け対象のfunctionになるように実行する
  * @private
  * @param {string} _name 変数名指定
  * @returns {function}
  */
 function named (_name){
-	return (new Function("return function(c){return function " + _name + "(){return c(this, arguments);};};")())(Function.apply.bind(this));
+	return (new Function("return function(c){return function " + _name + "(){return c(this,arguments);};};")())(Function.apply.bind(this));
 };
 
 /**
@@ -81,7 +83,7 @@ function exinherit (dst, isUpperVersion, byDefine){
 				if(byDefine && dst[key] instanceof Object){
 					Object.defineProperty(src, key, dst[key]);
 				}else{
-					Object.defineProperty(src, key, Object.getOwnPropertyDescriptor(dst, key));
+					Object.defineProperty(src, key, Object.getOwnPropertyDescriptor(dst, key) || {});
 				}
 			}
 			///同名の固有メンバがあるが、objectの場合は下位メンバも走査するため再帰へ。
@@ -188,7 +190,7 @@ function iname(_namespace, _constructor){
 ///prototypeへの追加
 Object.defineProperty(iname.prototype, "extend", {
 	value: function(){ return callExinherit.call(this, arguments, false, false); },
-	enumerable: false, configurable: false
+	enumerable: false, configurable: false, writable: false
 });
 ///prototypeへのdefineProperty
 Object.defineProperty(iname.prototype, "exdef", {
@@ -205,6 +207,11 @@ Object.defineProperty(iname.prototype, "apdef", {
 	value: function(){ return callExinherit.call(this, arguments, true, true); },
 	enumerable: false, configurable: false, writable: false
 });
+
+//Object.defineProperty(iname.prototype, "poly", {
+//	value: function(){ return callExinherit.call(this, arguments, true, true); },
+//	enumerable: false, configurable: false, writable: false
+//});
 
 ///_globalへinameを公開
 var _iname = named.call(iname, "iname");
